@@ -7,5 +7,10 @@ version = "0.1.0"
 CGcoefficient = "c862aa61-d51e-47d1-b396-b1e789b4e0b6"
 EnumX = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
 HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
-RationalRoots = "308eb6b3-cc68-5ff3-9e97-c3c4da4fa681"
 SphericalHarmonics = "c489a379-e885-57ff-9236-bd896d33c250"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

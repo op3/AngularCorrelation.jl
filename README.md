@@ -27,7 +27,7 @@ The following code can be used to calculate a 0⁺ → 1⁺ → 2 → 0 cascade:
 using AngularCorrelation
 
 S0 = State(0, Parity.positive)
-g0 = E1()
+g0 = M1()
 S1 = State(1, Parity.positive)
 g1 = Dipole()
 S2 = State(2, Parity.unknown)
