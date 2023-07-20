@@ -13,7 +13,7 @@ by a linearly polarized γ-ray beam (the first γ).
 In Julia, run
 
 ```julia
-import Pkg; pkg.add("https://github.com/op3/AngularCorrelation.jl.git")
+import Pkg; Pkg.add(url="https://github.com/op3/AngularCorrelation.jl.git")
 ```
 
 ## Usage

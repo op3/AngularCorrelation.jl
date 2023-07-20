@@ -1,5 +1,7 @@
 module AngularCorrelation
 
+export Wcorr, Parity, EMCharacter, State, Transition, Dipole, Quadrupole, E1, M1, E2, M2
+
 using EnumX
 using HalfIntegers: half, Half, HalfInt, twice
 using RationalRoots: signedroot, RationalRoot
