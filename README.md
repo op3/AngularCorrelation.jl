@@ -43,8 +43,10 @@ Wcorr(theta1, phi1, theta2, phi2,
       S0, g0, S1, g1, S2, g2, S3)
 ```
 
-Supplying polarity and electromagnetic character information for anything
+Supplying parity and electromagnetic character information for anything
 but the first transition and first two states is useless.
+Strictly speaking, the parity of the states involved is ignored as well.
+In a future version, I might include a check to make sure that the cascade is valid.
 
 ## Conventions
 

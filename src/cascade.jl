@@ -49,10 +49,10 @@ end
 
 Base.broadcastable(x::State) = Ref(x)
 
-function State(J::Int, parity::Parity.T)
+function State(J::Int, parity::Parity.T=Parity.unknown)
     State(HalfInt(J), parity)
 end
 
-function State(J::Rational, parity::Parity.T)
+function State(J::Rational, parity::Parity.T=Parity.unknown)
     State(HalfInt(J), parity)
 end

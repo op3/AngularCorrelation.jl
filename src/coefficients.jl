@@ -12,13 +12,6 @@ L: multipolarity
 Lp: multipolarity (next-order)
 
 """
-#const lru_F_ord = LRU{Tuple{Int, UInt, UInt, HalfInt, HalfInt}, Float64}(maxsize=20000)
-#function F(nu::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
-#    get!(lru_F_ord, (nu, L, Lp, J2, J1)) do
-#        _F(nu, L, Lp, J2, J1)
-#    end
-#end
-
 @inline function F(nu::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
     if (nu == 0)
         (L == Lp)
@@ -37,13 +30,6 @@ generalized F-coefficient
 
 Hamilton, eq 12.163
 """
-#const lru_F_gen = LRU{Tuple{Int, Int, Int, UInt, UInt, HalfInt, HalfInt}, Float64}(maxsize=20000)
-#function F(nu::Int, nu1::Int, nu0::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
-#    get!(lru_F_gen, (nu, nu1, nu0, L, Lp, J2, J1)) do
-#        _F(nu, nu1, nu0, L, Lp, J2, J1)
-#    end
-#end
-
 @inline function F(nu::Int, nu1::Int, nu0::Int, L::UInt, Lp::UInt, J1::HalfInt, J0::HalfInt)
     (-1)^(Lp + nu1 + nu0 + 1) * sqrt(
         (2 * J0 + 1) *
@@ -130,23 +116,35 @@ For linearly-polarized radiation!
     if q == 0
         B(nu, state_from, gamma, state_to)
     elseif abs(q) == 2
-        -(1 / 2) *
-        Int(gamma.em_charp) *
-        (
-            F(nu, gamma.L, gamma.L, state_from.J, state_to.J) *
-            wigner3j(gamma.L, gamma.L, nu, 1, 1, -2) /
-            wigner3j(gamma.L, gamma.L, nu, 1, -1, 0)
-            +
-            F(nu, gamma.L, gamma.Lp, state_from.J, state_to.J) *
-            (-1)^(gamma.L + gamma.Lp) * 2 * gamma.delta *
-            wigner3j(gamma.L, gamma.Lp, nu, 1, 1, -2) /
-            wigner3j(gamma.L, gamma.Lp, nu, 1, -1, 0)
-            +
-            F(nu, gamma.Lp, gamma.Lp, state_from.J, state_to.J) *
-            gamma.delta^2 *
-            wigner3j(gamma.Lp, gamma.Lp, nu, 1, 1, -2) /
-            wigner3j(gamma.Lp, gamma.Lp, nu, 1, -1, 0)
-        ) / (1 + gamma.delta^2)
+        # TODO: Equation in Hamilton?
+        if (
+            gamma.L + gamma.L >= nu &&
+            abs(gamma.L - gamma.L) <= nu &&
+            gamma.L + gamma.Lp >= nu &&
+            abs(gamma.L - gamma.Lp) < nu &&
+            gamma.Lp + gamma.Lp >= nu &&
+            abs(gamma.Lp - gamma.Lp) <= nu
+        )
+            -(1 / 2) *
+            Int(gamma.em_charp) *
+            (
+                F(nu, gamma.L, gamma.L, state_from.J, state_to.J) *
+                wigner3j(gamma.L, gamma.L, nu, 1, 1, -2) /
+                wigner3j(gamma.L, gamma.L, nu, 1, -1, 0)
+                +
+                F(nu, gamma.L, gamma.Lp, state_from.J, state_to.J) *
+                (-1)^(gamma.L + gamma.Lp) * 2 * gamma.delta *
+                wigner3j(gamma.L, gamma.Lp, nu, 1, 1, -2) /
+                wigner3j(gamma.L, gamma.Lp, nu, 1, -1, 0)
+                +
+                F(nu, gamma.Lp, gamma.Lp, state_from.J, state_to.J) *
+                gamma.delta^2 *
+                wigner3j(gamma.Lp, gamma.Lp, nu, 1, 1, -2) /
+                wigner3j(gamma.Lp, gamma.Lp, nu, 1, -1, 0)
+            ) / (1 + gamma.delta^2)
+        else
+            0
+        end
     else
         0
     end
