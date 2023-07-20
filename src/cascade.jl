@@ -1,16 +1,16 @@
 using EnumX
 using HalfIntegers: Half, HalfInt
 
-@enumx EMCharacter electric = -1 magnetic = 1 unknown = 0
+@enumx EMCharacter electric = 1 magnetic = -1 unknown = 0
 @enumx Parity negative = -1 positive = 1 unknown = 0
 
 """
 Representation of transition between two states
 """
 struct Transition
-    L::UInt
+    L::Int
     em_char::EMCharacter.T
-    Lp::UInt
+    Lp::Int
     em_charp::EMCharacter.T
     delta::Real
 end

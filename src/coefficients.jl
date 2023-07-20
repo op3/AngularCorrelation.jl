@@ -12,7 +12,7 @@ L: multipolarity
 Lp: multipolarity (next-order)
 
 """
-@inline function F(λ::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
+@inline function F(λ::Int, L::Int, Lp::Int, J2::HalfInt, J1::HalfInt)
     if (λ ≡ 0)
         # Simple case: Hamilton, eq. 12.169
         (L ≡ Lp)
@@ -41,7 +41,7 @@ generalized F-coefficient
 
 Hamilton, eq 12.163
 """
-@inline function F(λ::Int, λ1::Int, λ0::Int, L::UInt, Lp::UInt, J1::HalfInt, J0::HalfInt)
+@inline function F(λ::Int, λ1::Int, λ0::Int, L::Int, Lp::Int, J1::HalfInt, J0::HalfInt)
     if (λ ≡ 0 && λ1 ≡ 0 && λ0 ≡ 0)
         (L ≡ Lp)
     elseif (L + Lp ≥ λ && abs(L - Lp) ≤ λ)
@@ -142,17 +142,19 @@ For linearly-polarized radiation!
             abs(γ.Lp - γ.Lp) ≤ λ
         )
             -(1 / 2) *
-            Int(γ.em_charp) *
             (
+                Int(γ.em_char) *
                 F(λ, γ.L, γ.L, state_from.J, state_to.J) *
                 wigner3j(γ.L, γ.L, λ, 1, 1, -2) /
                 wigner3j(γ.L, γ.L, λ, 1, -1, 0)
-                +
+                -
+                Int(γ.em_charp) *
                 F(λ, γ.L, γ.Lp, state_from.J, state_to.J) *
                 (-1)^(γ.L + γ.Lp) * 2 * γ.delta *
                 wigner3j(γ.L, γ.Lp, λ, 1, 1, -2) /
                 wigner3j(γ.L, γ.Lp, λ, 1, -1, 0)
                 +
+                Int(γ.em_charp) *
                 F(λ, γ.Lp, γ.Lp, state_from.J, state_to.J) *
                 γ.delta^2 *
                 wigner3j(γ.Lp, γ.Lp, λ, 1, 1, -2) /
@@ -169,7 +171,7 @@ end
 """
 See Hamilton, eq. 12.243
 """
-@inline function kappa(λ::Int, L::UInt, Lp::UInt)
+@inline function kappa(λ::Int, L::Int, Lp::Int)
     -sqrt(factorial(λ - 2) / factorial(λ + 2)) *
     wigner3j(L, Lp, λ, 1, 1, -2) /
     wigner3j(L, Lp, λ, 1, -1, 0)
