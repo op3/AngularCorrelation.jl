@@ -12,16 +12,27 @@ L: multipolarity
 Lp: multipolarity (next-order)
 
 """
-@inline function F(nu::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
-    if (nu == 0)
-        (L == Lp)
-    else
+@inline function F(λ::Int, L::UInt, Lp::UInt, J2::HalfInt, J1::HalfInt)
+    if (λ ≡ 0)
+        # Simple case: Hamilton, eq. 12.169
+        (L ≡ Lp)
+    elseif (
+        L + Lp ≥ λ &&
+        abs(L - Lp) ≤ λ &&
+        Lp + J1 ≥ J2 &&
+        abs(Lp - J1) ≤ J2 &&
+        L + J2 ≥ J1 &&
+        abs(L - J2) ≤ J1 &&
+        abs(λ - J1) ≤ J1
+    )
         (
             (-1)^(J1 + J2 - 1) *
-            sqrt((2 * nu + 1) * (2 * L + 1) * (2 * Lp + 1) * (2 * J1 + 1)) *
-            wigner3j(L, Lp, nu, 1, -1, 0) *
-            wigner6j(L, Lp, nu, J1, J1, J2)
+            sqrt((2 * λ + 1) * (2 * L + 1) * (2 * Lp + 1) * (2 * J1 + 1)) *
+            wigner3j(L, Lp, λ, 1, -1, 0) *
+            wigner6j(L, Lp, λ, J1, J1, J2)
         )
+    else
+        0
     end
 end
 
@@ -30,17 +41,23 @@ generalized F-coefficient
 
 Hamilton, eq 12.163
 """
-@inline function F(nu::Int, nu1::Int, nu0::Int, L::UInt, Lp::UInt, J1::HalfInt, J0::HalfInt)
-    (-1)^(Lp + nu1 + nu0 + 1) * sqrt(
-        (2 * J0 + 1) *
-        (2 * J1 + 1) *
-        (2 * L + 1) *
-        (2 * Lp + 1) *
-        (2 * nu0 + 1) *
-        (2 * nu1 + 1) *
-        (2 * nu + 1)
-    ) * wigner3j(L, Lp, nu, 1, -1, 0) *
-    wigner9j(J1, L, J0, J1, Lp, J0, nu1, nu, nu0)
+@inline function F(λ::Int, λ1::Int, λ0::Int, L::UInt, Lp::UInt, J1::HalfInt, J0::HalfInt)
+    if (λ ≡ 0 && λ1 ≡ 0 && λ0 ≡ 0)
+        (L ≡ Lp)
+    elseif (L + Lp ≥ λ && abs(L - Lp) ≤ λ)
+        (-1)^(Lp + λ1 + λ0 + 1) * sqrt(
+            (2 * J0 + 1) *
+            (2 * J1 + 1) *
+            (2 * L + 1) *
+            (2 * Lp + 1) *
+            (2 * λ0 + 1) *
+            (2 * λ1 + 1) *
+            (2 * λ + 1)
+        ) * wigner3j(L, Lp, λ, 1, -1, 0) *
+        wigner9j(J1, L, J0, J1, Lp, J0, λ1, λ, λ0)
+    else
+        0
+    end
 end
 
 """
@@ -48,12 +65,12 @@ Angular distribution coefficient
 
 See Hamilton, eq. 12.185.
 """
-@inline function A(nu::Int, state_from::State, gamma::Transition, state_to::State)
+@inline function A(λ::Int, state_from::State, γ::Transition, state_to::State)
     (
-        F(nu, gamma.L, gamma.L, state_to.J, state_from.J) +
-        F(nu, gamma.L, gamma.Lp, state_to.J, state_from.J) * 2 * gamma.delta +
-        F(nu, gamma.Lp, gamma.Lp, state_to.J, state_from.J) * gamma.delta^2
-    ) / (1 + gamma.delta^2)
+        F(λ, γ.L, γ.L, state_to.J, state_from.J) +
+        F(λ, γ.L, γ.Lp, state_to.J, state_from.J) * 2 * γ.delta +
+        F(λ, γ.Lp, γ.Lp, state_to.J, state_from.J) * γ.delta^2
+    ) / (1 + γ.delta^2)
 end
 
 """
@@ -63,14 +80,14 @@ See Hamilton, eq. 12.205
 
 Only for mixture of two multipolarities
 """
-@inline function A(nu1::Int, nu2::Int, nu0::Int, state_from::State, gamma::Transition, state_to::State)
+@inline function A(λ1::Int, λ2::Int, λ0::Int, state_from::State, γ::Transition, state_to::State)
     (
-        F(nu1, nu2, nu0, gamma.L, gamma.L, state_to.J, state_from.J) +
-        F(nu1, nu2, nu0, gamma.L, gamma.Lp, state_to.J, state_from.J) *
-        2 * gamma.delta +
-        F(nu1, nu2, nu0, gamma.Lp, gamma.Lp, state_to.J, state_from.J) *
-        gamma.delta^2
-    ) / (1 + gamma.delta^2)
+        F(λ1, λ2, λ0, γ.L, γ.L, state_to.J, state_from.J) +
+        F(λ1, λ2, λ0, γ.L, γ.Lp, state_to.J, state_from.J) *
+        2 * γ.delta +
+        F(λ1, λ2, λ0, γ.Lp, γ.Lp, state_to.J, state_from.J) *
+        γ.delta^2
+    ) / (1 + γ.delta^2)
 end
 
 """
@@ -79,14 +96,14 @@ Orientation parameter
 See Hamilton, eq. 12.228
 For unpolarized radiation!
 """
-@inline function B(nu::Int, state_from::State, gamma::Transition, state_to::State)
+@inline function B(λ::Int, state_from::State, γ::Transition, state_to::State)
     (
-        F(nu, gamma.L, gamma.L, state_from.J, state_to.J) +
-        F(nu, gamma.L, gamma.Lp, state_from.J, state_to.J) *
-        (-1)^(gamma.L + gamma.Lp) * 2 * gamma.delta +
-        F(nu, gamma.Lp, gamma.Lp, state_from.J, state_to.J) *
-        gamma.delta^2
-    ) / (1 + gamma.delta^2)
+        F(λ, γ.L, γ.L, state_from.J, state_to.J) +
+        F(λ, γ.L, γ.Lp, state_from.J, state_to.J) *
+        (-1)^(γ.L + γ.Lp) * 2 * γ.delta +
+        F(λ, γ.Lp, γ.Lp, state_from.J, state_to.J) *
+        γ.delta^2
+    ) / (1 + γ.delta^2)
 end
 
 """
@@ -95,53 +112,52 @@ Orientation parameter
 See Hamilton, eq. 12.246
 For linearly-polarized radiation!
 """
-@inline function B_lpol(nu::Int, state_from::State, gamma::Transition, state_to::State)
-    Int(gamma.em_charp) * (
-        F(nu, gamma.L, gamma.L, state_from.J, state_to.J) *
-        kappa(nu, gamma.L, gamma.L) +
-        F(nu, gamma.L, gamma.Lp, state_from.J, state_to.J) *
-        kappa(nu, gamma.L, gamma.Lp) *
-        (-1)^(gamma.L + gamma.Lp) * 2 * gamma.delta +
-        F(nu, gamma.Lp, gamma.Lp, state_from.J, state_to.J) *
-        kappa(nu, gamma.Lp, gamma.Lp) *
-        gamma.delta^2
-    ) / (1 + gamma.delta^2)
+@inline function B_lpol(λ::Int, state_from::State, γ::Transition, state_to::State)
+    Int(γ.em_charp) * (
+        F(λ, γ.L, γ.L, state_from.J, state_to.J) *
+        kappa(λ, γ.L, γ.L) +
+        F(λ, γ.L, γ.Lp, state_from.J, state_to.J) *
+        kappa(λ, γ.L, γ.Lp) *
+        (-1)^(γ.L + γ.Lp) * 2 * γ.delta +
+        F(λ, γ.Lp, γ.Lp, state_from.J, state_to.J) *
+        kappa(λ, γ.Lp, γ.Lp) *
+        γ.delta^2
+    ) / (1 + γ.delta^2)
 end
 
 """
 Hamilton, eqs. 12.232 to 12.234
 For linearly-polarized radiation!
 """
-@inline function B_lpol(nu::Int, q::Int, state_from::State, gamma::Transition, state_to::State)
-    if q == 0
-        B(nu, state_from, gamma, state_to)
-    elseif abs(q) == 2
-        # TODO: Equation in Hamilton?
+@inline function B_lpol(q::Int, λ::Int, state_from::State, γ::Transition, state_to::State)
+    if q ≡ 0
+        B(λ, state_from, γ, state_to)
+    elseif abs(q) ≡ 2
         if (
-            gamma.L + gamma.L >= nu &&
-            abs(gamma.L - gamma.L) <= nu &&
-            gamma.L + gamma.Lp >= nu &&
-            abs(gamma.L - gamma.Lp) < nu &&
-            gamma.Lp + gamma.Lp >= nu &&
-            abs(gamma.Lp - gamma.Lp) <= nu
+            γ.L + γ.L ≥ λ &&
+            abs(γ.L - γ.L) ≤ λ &&
+            γ.L + γ.Lp ≥ λ &&
+            abs(γ.L - γ.Lp) < λ &&
+            γ.Lp + γ.Lp ≥ λ &&
+            abs(γ.Lp - γ.Lp) ≤ λ
         )
             -(1 / 2) *
-            Int(gamma.em_charp) *
+            Int(γ.em_charp) *
             (
-                F(nu, gamma.L, gamma.L, state_from.J, state_to.J) *
-                wigner3j(gamma.L, gamma.L, nu, 1, 1, -2) /
-                wigner3j(gamma.L, gamma.L, nu, 1, -1, 0)
+                F(λ, γ.L, γ.L, state_from.J, state_to.J) *
+                wigner3j(γ.L, γ.L, λ, 1, 1, -2) /
+                wigner3j(γ.L, γ.L, λ, 1, -1, 0)
                 +
-                F(nu, gamma.L, gamma.Lp, state_from.J, state_to.J) *
-                (-1)^(gamma.L + gamma.Lp) * 2 * gamma.delta *
-                wigner3j(gamma.L, gamma.Lp, nu, 1, 1, -2) /
-                wigner3j(gamma.L, gamma.Lp, nu, 1, -1, 0)
+                F(λ, γ.L, γ.Lp, state_from.J, state_to.J) *
+                (-1)^(γ.L + γ.Lp) * 2 * γ.delta *
+                wigner3j(γ.L, γ.Lp, λ, 1, 1, -2) /
+                wigner3j(γ.L, γ.Lp, λ, 1, -1, 0)
                 +
-                F(nu, gamma.Lp, gamma.Lp, state_from.J, state_to.J) *
-                gamma.delta^2 *
-                wigner3j(gamma.Lp, gamma.Lp, nu, 1, 1, -2) /
-                wigner3j(gamma.Lp, gamma.Lp, nu, 1, -1, 0)
-            ) / (1 + gamma.delta^2)
+                F(λ, γ.Lp, γ.Lp, state_from.J, state_to.J) *
+                γ.delta^2 *
+                wigner3j(γ.Lp, γ.Lp, λ, 1, 1, -2) /
+                wigner3j(γ.Lp, γ.Lp, λ, 1, -1, 0)
+            ) / (1 + γ.delta^2)
         else
             0
         end
@@ -153,8 +169,8 @@ end
 """
 See Hamilton, eq. 12.243
 """
-@inline function kappa(nu::Int, L::UInt, Lp::UInt)
-    -sqrt(factorial(nu - 2) / factorial(nu + 2)) *
-    wigner3j(L, Lp, nu, 1, 1, -2) /
-    wigner3j(L, Lp, nu, 1, -1, 0)
+@inline function kappa(λ::Int, L::UInt, Lp::UInt)
+    -sqrt(factorial(λ - 2) / factorial(λ + 2)) *
+    wigner3j(L, Lp, λ, 1, 1, -2) /
+    wigner3j(L, Lp, λ, 1, -1, 0)
 end
