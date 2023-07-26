@@ -4,13 +4,16 @@ authors = ["Oliver Papst <opapst@ikp.tu-darmstadt.de>"]
 version = "0.1.0"
 
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 CGcoefficient = "c862aa61-d51e-47d1-b396-b1e789b4e0b6"
 EnumX = "4e289a0a-7415-4d19-859d-a7e5c4648b56"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
 SphericalHarmonics = "c489a379-e885-57ff-9236-bd896d33c250"
 
 [extras]
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Test", "FastGaussQuadrature"]

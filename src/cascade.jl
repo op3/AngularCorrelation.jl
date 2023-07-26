@@ -12,7 +12,7 @@ struct Transition
     em_char::EMCharacter.T
     Lp::Int
     em_charp::EMCharacter.T
-    delta::Real
+    δ::Real
 end
 
 """
@@ -30,12 +30,12 @@ function alt_char(char::EMCharacter.T)
     end
 end
 
-E1(delta=0.0) = Transition(HalfInt(1), EMCharacter.electric, HalfInt(2), EMCharacter.magnetic, delta)
-M1(delta=0.0) = Transition(HalfInt(1), EMCharacter.magnetic, HalfInt(2), EMCharacter.electric, delta)
-E2(delta=0.0) = Transition(HalfInt(2), EMCharacter.electric, HalfInt(3), EMCharacter.magnetic, delta)
-M2(delta=0.0) = Transition(HalfInt(2), EMCharacter.magnetic, HalfInt(3), EMCharacter.electric, delta)
-Dipole(delta=0.0) = Transition(HalfInt(1), EMCharacter.unknown, HalfInt(2), EMCharacter.unknown, delta)
-Quadrupole(delta=0.0) = Transition(HalfInt(2), EMCharacter.unknown, HalfInt(3), EMCharacter.unknown, delta)
+E1(δ=0.0) = Transition(HalfInt(1), EMCharacter.electric, HalfInt(2), EMCharacter.magnetic, δ)
+M1(δ=0.0) = Transition(HalfInt(1), EMCharacter.magnetic, HalfInt(2), EMCharacter.electric, δ)
+E2(δ=0.0) = Transition(HalfInt(2), EMCharacter.electric, HalfInt(3), EMCharacter.magnetic, δ)
+M2(δ=0.0) = Transition(HalfInt(2), EMCharacter.magnetic, HalfInt(3), EMCharacter.electric, δ)
+Dipole(δ=0.0) = Transition(HalfInt(1), EMCharacter.unknown, HalfInt(2), EMCharacter.unknown, δ)
+Quadrupole(δ=0.0) = Transition(HalfInt(2), EMCharacter.unknown, HalfInt(3), EMCharacter.unknown, δ)
 
 Base.broadcastable(x::Transition) = Ref(x)
 

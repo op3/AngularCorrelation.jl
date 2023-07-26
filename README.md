@@ -1,12 +1,13 @@
 # AngularCorrelation.jl
 
-A package to calculate angular correlations for triple γ cascades.
-The direction and polarization of the zeroth γ are known.
+A package to calculate angular distributions and correlations for γ cascades.
+The direction and polarization of the zeroth γ-ray are known.
 It is aligned with the z axis, the xz plane is the plane of (linear) polarization.
 
-This is code can be used to calculate the angular correlation of
-the first two γ-rays emitted from a nucleus that was excited
-by a linearly polarized γ-ray beam (the first γ).
+The angular correlation of subsequently emitted photons can be obtained
+- … for any single emitted photon after (optionally) an arbitrary long cascade of unobserved intermediate photons.
+  This is also referred to as *angular distribution*.
+- … between the first emitted photon and any (single) subsequent photon after (optionally) an arbitrary long cascade of unobserved intermediate photons.
 
 ## Installation
 
@@ -50,12 +51,15 @@ In a future version, I might include a check to make sure that the cascade is va
 
 ## Conventions
 
-The Integral over the complete probability distribution ( ∫∫∫∫ Wcorr(θ₁, ϕ₁,θ₂, ϕ₂) sin(θ₁) sin(θ₂) dθ₁ dφ₁ dθ₂ dφ₂ )
+The Integral over the complete probability distribution
+( ∫∫∫∫ Wcorr(θ₁, ϕ₁,θ₂, ϕ₂) sin(θ₁) sin(θ₂) dθ₁ dφ₁ dθ₂ dφ₂ and
+∫∫ W(θ, ϕ) sin(θ) dθ dφ )
 is equal to 4π.
 Thus, if the direction of the first or second γ is fixed,
 one obtains an angular distribution for the other γ.
 
 The KSW convention by Krane, Steffen, Wheeler [\[2\]](#ref-2) for the multipole mixing ratio δ is used.
+It is assumed that only the first and second-order multipolarities contribute.
 
 ## License<a name="license"></a>
 
