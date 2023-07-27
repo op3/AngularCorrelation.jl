@@ -26,6 +26,7 @@ function Wcorr_coeff(
     S0::State, γ0::Transition,
     S1::State, γ1::Transition,
     cascade...)
+    check_cascade(S0, γ0, S1, γ1, cascade...)
     coeff = Dict{Vector{Int8},Float64}()
     for λ0 in 0:2:4
         for λ1 in 0:2:4
@@ -104,6 +105,7 @@ precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State,
 function W_coeff(
     S0::State, γ0::Transition,
     cascade...)
+    check_cascade(S0, γ0, cascade...)
     coeff_Pl0 = Dict{Int8,Float64}()
     coeff_Pl2 = Dict{Int8,Float64}()
     for λ in 0:2:4

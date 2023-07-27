@@ -46,8 +46,7 @@ Wcorr(theta1, phi1, theta2, phi2,
 
 Supplying parity and electromagnetic character information for anything
 but the first transition and first two states is useless.
-Strictly speaking, the parity of the states involved is ignored as well.
-In a future version, I might include a check to make sure that the cascade is valid.
+The parity of the states is optional (but a useful cross-check to make sure the transition makes sense)
 
 ## Conventions
 
