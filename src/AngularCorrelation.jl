@@ -153,4 +153,42 @@ precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Tr
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 
+function W_estimate_max(coeff_Pl0, coeff_Pl2)
+    theta = 0:π/6:π
+    phi = 0:π/6:2π
+    vals = W.(theta, phi', Ref(coeff_Pl0), Ref(coeff_Pl2))
+    maximum(vals)
+end
+
+function Wcorr_estimate_max(coeff)
+    theta1 = reshape(Vector(0:π/6:π), (7, 1, 1, 1))
+    phi1 = reshape(Vector(0:π/6:2π), (1, 13, 1, 1))
+    theta2 = reshape(Vector(0:π/6:π), (1, 1, 7, 1))
+    phi2 = reshape(Vector(0:π/6:2π), (1, 1, 1, 13))
+    vals = Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff))
+    maximum(vals)
+end
+
+function W_sample(n::Int, cascade...)
+    Wmax = W_estimate_max(cascade...)
+    theta, phi = rand_sphere(n)
+    coeff_Pl0, coeff_Pl2 = W_coeff(cascade...)
+    values = W.(theta, phi, Ref(coeff_Pl0), Ref(coeff_Pl2))
+    sample = rand(n)
+    @assert all(values .< Wmax)
+    selection = sample .< values
+    theta[selection], phi[selection]
+end
+
+function Wcorr_sample(n::Int, coeff)
+    Wmax = Wcorr_estimate_max(coeff)
+    theta1, phi1 = rand_sphere(n)
+    theta2, phi2 = rand_sphere(n)
+    values = Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff))
+    sample = rand(n)
+    @assert all(values .< Wmax)
+    selection = sample .< values
+    theta1[selection], phi1[selection], theta2[selection], phi2[selection]
+end
+
 end # module AngularCorrelation
