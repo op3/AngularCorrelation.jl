@@ -101,9 +101,9 @@ include("integrate.jl")
             return W(
                 theta, phi,
                 State(0), E2(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
-        end, 7) ≈ 4 * π rtol = 1e-6
+        end, 9) ≈ 4 * π rtol = 1e-5
 
     @test QuadSphere(
         function (theta, phi)
@@ -111,9 +111,9 @@ include("integrate.jl")
                 theta, phi,
                 State(0), E2(),
                 State(2), Dipole(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
-        end, 7) ≈ 4 * π rtol = 1e-6
+        end, 9) ≈ 4 * π rtol = 1e-5
 
     @test W(π / 3, π / 3, State(0), M1(), State(1), Dipole(), State(0)) ≈ 0.65625
     @test W(π / 3, π / 3, State(0), E1(), State(1), Dipole(), State(0)) ≈ 1.21875
@@ -139,13 +139,13 @@ include("integrate.jl")
                 π / 5, π / 3,
                 State(0), E1(),
                 State(1), Dipole(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
         end, 9) ≈ W(
         π / 5, π / 3,
         State(0), E1(),
         State(1), Dipole(),
-        State(2), Dipole(),
+        State(2), Quadrupole(),
         State(0))
 
     @test QuadSphere(
@@ -156,14 +156,14 @@ include("integrate.jl")
                 State(0), E1(),
                 State(1), Dipole(),
                 State(2), Dipole(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
         end, 9) ≈ W(
         π / 5, π / 3,
         State(0), E1(),
         State(1), Dipole(),
         State(2), Dipole(),
-        State(2), Dipole(),
+        State(2), Quadrupole(),
         State(0))
 
     @test QuadSphere(
@@ -172,14 +172,14 @@ include("integrate.jl")
                 theta, phi,
                 π / 5, π / 3, State(0), M1(),
                 State(1), Dipole(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
         end, 9) ≈ W(
         π / 5, π / 3,
         State(0), M1(),
         State(1), Dipole(),
-        State(2), Dipole(),
-        State(0))
+        State(2), Quadrupole(),
+        State(0)) rtol = 1e-6
 
     @test QuadSphere(
         function (theta, phi)
@@ -188,14 +188,14 @@ include("integrate.jl")
                 State(0), M1(),
                 State(1), Dipole(),
                 State(2), Dipole(),
-                State(2), Dipole(),
+                State(2), Quadrupole(),
                 State(0))
         end, 9) ≈ W(
         π / 5, π / 5,
         State(0), M1(),
         State(1), Dipole(),
         State(2), Dipole(),
-        State(2), Dipole(),
+        State(2), Quadrupole(),
         State(0))
 
     @test QuadSphere(

@@ -88,7 +88,7 @@ end
 function check_cascade(cascade...)
     @assert length(cascade) % 2 ≡ 1
     @assert length(cascade) ≥ 3
-    for i in 1:2:length(cascade)-4
+    for i in 1:2:length(cascade)-2
         check_transition(cascade[i:i+2]...)
     end
 end
