@@ -108,13 +108,10 @@ function W_coeff(
     check_cascade(S0, γ0, cascade...)
     coeff_Pl0 = Dict{Int8,Float64}()
     coeff_Pl2 = Dict{Int8,Float64}()
-    for λ in 0:2:4
+    for λ in 2:4
         fso = final_state_orientation(λ, cascade...)
         coeff_Pl0[λ] = B(λ, S0, γ0, cascade[begin]) * fso
-        if λ ≥ 2
-            coeff_Pl2[λ] =
-                B_lpol(λ, S0, γ0, cascade[begin]) * fso
-        end
+        coeff_Pl2[λ] = B_lpol(λ, S0, γ0, cascade[begin]) * fso
     end
     return coeff_Pl0, coeff_Pl2
 end
@@ -123,12 +120,10 @@ function W(
     theta::T, phi::T,
     coeff_Pl0::Dict{Int8,T},
     coeff_Pl2::Dict{Int8,T}) where {T<:Real}
-    res = 0
+    res = 1.0
     c2phi = cos(2 * phi)
-    for λ in 0:2:4
-        res += coeff_Pl0[λ] * associatedLegendre(theta, l=λ, m=0, norm=Unnormalized())
-    end
     for λ in 2:2:4
+        res += coeff_Pl0[λ] * associatedLegendre(theta, l=λ, m=0, norm=Unnormalized())
         res += coeff_Pl2[λ] * associatedLegendre(theta, l=λ, m=2, norm=Unnormalized()) * c2phi
     end
     return res
