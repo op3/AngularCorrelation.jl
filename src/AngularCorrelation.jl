@@ -106,27 +106,26 @@ function W_coeff(
     S0::State, γ0::Transition,
     cascade...)
     check_cascade(S0, γ0, cascade...)
-    coeff_Pl0 = Dict{Int8,Float64}()
-    coeff_Pl2 = Dict{Int8,Float64}()
-    for λ in 2:4
+    coeff = zeros(4)
+    for λ in [2, 4]
         fso = final_state_orientation(λ, cascade...)
-        coeff_Pl0[λ] = B(λ, S0, γ0, cascade[begin]) * fso
-        coeff_Pl2[λ] = B_lpol(λ, S0, γ0, cascade[begin]) * fso
+        coeff[λ-1] = B(λ, S0, γ0, cascade[begin]) * fso
+        coeff[λ] = B_lpol(λ, S0, γ0, cascade[begin]) * fso
     end
-    return coeff_Pl0, coeff_Pl2
+    return coeff
 end
 
 function W(
     theta::T, phi::T,
-    coeff_Pl0::Dict{Int8,T},
-    coeff_Pl2::Dict{Int8,T}) where {T<:Real}
-    res = 1.0
+    coeff::Vector{T}) where {T<:Real}
     c2phi = cos(2 * phi)
-    for λ in 2:2:4
-        res += coeff_Pl0[λ] * associatedLegendre(theta, l=λ, m=0, norm=Unnormalized())
-        res += coeff_Pl2[λ] * associatedLegendre(theta, l=λ, m=2, norm=Unnormalized()) * c2phi
-    end
-    return res
+    (
+        1.0 +
+        coeff[1] * associatedLegendre(theta, l=2, m=0, norm=Unnormalized()) +
+        coeff[2] * associatedLegendre(theta, l=2, m=2, norm=Unnormalized()) * c2phi +
+        coeff[3] * associatedLegendre(theta, l=4, m=0, norm=Unnormalized()) +
+        coeff[4] * associatedLegendre(theta, l=4, m=2, norm=Unnormalized()) * c2phi
+    )
 end
 
 """
@@ -144,8 +143,8 @@ function W(
     theta::T, phi::T,
     S0::State, γ0::Transition,
     cascade...) where {T<:Real}
-    coeff_Pl0, coeff_Pl2 = W_coeff(S0, γ0, cascade...)
-    W(theta, phi, coeff_Pl0, coeff_Pl2)
+    coeff = W_coeff(S0, γ0, cascade...)
+    W(theta, phi, coeff)
 end
 
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State))
@@ -153,10 +152,10 @@ precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Tr
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 
-function W_estimate_max(coeff_Pl0, coeff_Pl2)
+function W_estimate_max(coeff)
     theta = 0:π/6:π
     phi = 0:π/6:2π
-    vals = W.(theta, phi', Ref(coeff_Pl0), Ref(coeff_Pl2))
+    vals = W.(theta, phi', Ref(coeff))
     maximum(vals)
 end
 
@@ -169,11 +168,13 @@ function Wcorr_estimate_max(coeff)
     maximum(vals)
 end
 
+include("rand_sphere.jl")
+
 function W_sample(n::Int, cascade...)
     Wmax = W_estimate_max(cascade...)
     theta, phi = rand_sphere(n)
-    coeff_Pl0, coeff_Pl2 = W_coeff(cascade...)
-    values = W.(theta, phi, Ref(coeff_Pl0), Ref(coeff_Pl2))
+    coeff = W_coeff(cascade...)
+    values = W.(theta, phi, Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
     selection = sample .< values
