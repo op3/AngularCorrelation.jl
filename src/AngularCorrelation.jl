@@ -1,9 +1,10 @@
 module AngularCorrelation
 
-export W, Wcorr, W_sample, W_sample_up_to, Wcorr_sample, Wcorr_sample_up_to, W_coeff, Wcorr_coeff
+export W, Wcorr, W_sample, W_sample_up_to, Wcorr_sample, Wcorr_sample_mt, Wcorr_sample_up_to, W_coeff, Wcorr_coeff
 export Parity, EMCharacter, State, Transition, Dipole, Quadrupole, E1, M1, E2, M2
 
 using SphericalHarmonics: Unnormalized, associatedLegendre, sphericalharmonic
+using Base.Threads
 
 include("coefficients.jl")
 
@@ -120,6 +121,12 @@ precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State,
 precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State))
+precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(Wcorr, (Float64, Float64, Float64, Float64, CoeffCorr{Float64}))
+precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, CoeffCorr{Float64}))
 
 function W_coeff(
     S0::State, γ0::Transition,
@@ -176,6 +183,12 @@ precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Tr
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
 precompile(W, (Float64, Float64, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(W, (Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State))
+precompile(W, (Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(W, (Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(W, (Vector{Float64}, Vector{Float64}, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State, Transition, State))
+precompile(W, (Float64, Float64, Float64, Float64, Vector{Float64}))
+precompile(W, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}))
 
 function W_estimate_max(coeff)
     theta = 0:π/6:π
@@ -206,8 +219,8 @@ function W_sample_up_to(n::Int, coeff::Vector{T}) where {T<:Real}
 end
 
 function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
-    theta = Vector{Float64}(undef, n)
-    phi = Vector{Float64}(undef, n)
+    theta = Vector{T}(undef, n)
+    phi = Vector{T}(undef, n)
     remaining = n
     sampled = 0
 
@@ -244,10 +257,10 @@ function Wcorr_sample_up_to(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
 end
 
 function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
-    theta1 = Vector{Float64}(undef, n)
-    phi1 = Vector{Float64}(undef, n)
-    theta2 = Vector{Float64}(undef, n)
-    phi2 = Vector{Float64}(undef, n)
+    theta1 = Vector{T}(undef, n)
+    phi1 = Vector{T}(undef, n)
+    theta2 = Vector{T}(undef, n)
+    phi2 = Vector{T}(undef, n)
     remaining = n
     sampled = 0
 
@@ -273,5 +286,27 @@ function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
 
     theta1, phi1, theta2, phi2
 end
+
+function Wcorr_sample_mt(n::Int, threads::Int, coeff::CoeffCorr{T}) where {T<:Real}
+    n_per_thread = Int(n / threads)
+    theta1 = Vector{T}(undef, n)
+    phi1 = Vector{T}(undef, n)
+    theta2 = Vector{T}(undef, n)
+    phi2 = Vector{T}(undef, n)
+
+    @threads for i = 1:threads
+        tt1, tp1, tt2, tp2 = Wcorr_sample(n_per_thread, coeff)
+        theta1[begin+(i-1)*n_per_thread:i*n_per_thread] = tt1
+        phi1[begin+(i-1)*n_per_thread:i*n_per_thread] = tp1
+        theta2[begin+(i-1)*n_per_thread:i*n_per_thread] = tt2
+        phi2[begin+(i-1)*n_per_thread:i*n_per_thread] = tp2
+    end
+    theta1, phi1, theta2, phi2
+end
+
+precompile(W_sample_up_to, (Int64, Vector{Float64}))
+precompile(Wcorr_sample_up_to, (Int64, CoeffCorr{Float64}))
+precompile(W_sample, (Int64, Vector{Float64}))
+precompile(Wcorr_sample, (Int64, CoeffCorr{Float64}))
 
 end # module AngularCorrelation

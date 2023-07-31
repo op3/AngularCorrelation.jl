@@ -218,7 +218,11 @@ include("integrate.jl")
     @test length(phi) ≡ 10
 
     coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
-    theta1, phi1, theta2, phi2 = Wcorr_sample(10, coeff)
-    @test length(theta) ≡ 10
-    @test length(phi) ≡ 10
+    theta1, phi1, theta2, phi2 = Wcorr_sample(100, coeff)
+    @test length(theta) ≡ 100
+    @test length(phi) ≡ 100
+
+    theta1, phi1, theta2, phi2 = Wcorr_sample_mt(100, 2, coeff)
+    @test length(theta) ≡ 100
+    @test length(phi) ≡ 100
 end
