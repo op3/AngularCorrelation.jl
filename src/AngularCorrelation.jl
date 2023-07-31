@@ -67,7 +67,7 @@ function Wcorr_coeff(
     return coeff
 end
 
-function Wcorr(
+@inline function Wcorr(
     theta1::T, phi1::T,
     theta2::T, phi2::T,
     coeff::CoeffCorr{Float64}) where {T<:Real}
@@ -78,6 +78,13 @@ function Wcorr(
                sphericalharmonic(theta2, phi2, λ2, q2)
     end
     real(res)
+end
+
+function Wcorr(
+    theta1::Vector{T}, phi1::Vector{T},
+    theta2::Vector{T}, phi2::Vector{T},
+    coeff::CoeffCorr{Float64}) where {T<:Real}
+    Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff))
 end
 
 """
@@ -91,7 +98,7 @@ This function is normalized to 4π.
 
 Hamilton, eq. 12.204
 """
-function Wcorr(
+@inline function Wcorr(
     theta1::T, phi1::T,
     theta2::T, phi2::T,
     S0::State, γ0::Transition,
@@ -99,6 +106,13 @@ function Wcorr(
     cascade...) where {T<:Real}
     coeff = Wcorr_coeff(S0, γ0, S1, γ1, cascade...)
     Wcorr(theta1, phi1, theta2, phi2, coeff)
+end
+
+function Wcorr(
+    theta1::Vector{T}, phi1::Vector{T},
+    theta2::Vector{T}, phi2::Vector{T},
+    cascade...) where {T<:Real}
+    Wcorr.(theta1, phi1, theta2, phi2, cascade...)
 end
 
 precompile(Wcorr, (Float64, Float64, Float64, Float64, State, Transition, State, Transition, State, Transition, State))
@@ -130,6 +144,12 @@ function W(
         coeff[3] * associatedLegendre(theta, l=4, m=0, norm=Unnormalized()) +
         coeff[4] * associatedLegendre(theta, l=4, m=2, norm=Unnormalized()) * c2phi
     )
+end
+
+function W(
+    theta::Vector{T}, phi::Vector{T},
+    coeff::Vector{T}) where {T<:Real}
+    W.(theta, phi, Ref(coeff))
 end
 
 """
