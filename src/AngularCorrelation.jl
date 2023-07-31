@@ -22,12 +22,16 @@ function final_state_orientation(λ2, cascade...)
     res * A(λ2, cascade[end-2], cascade[end-1], cascade[end])
 end
 
+struct CoeffCorr{T<:Real}
+    c::Dict{NTuple{4,Int8},T}
+end
+
 function Wcorr_coeff(
     S0::State, γ0::Transition,
     S1::State, γ1::Transition,
     cascade...)
     check_cascade(S0, γ0, S1, γ1, cascade...)
-    coeff = Dict{NTuple{4,Int8},Float64}()
+    coeff = CoeffCorr{Float64}(Dict{NTuple{4,Int8},Float64}())
     for λ0 in 0:2:4
         for λ1 in 0:2:4
             for λ2 in 0:2:4
@@ -46,10 +50,10 @@ function Wcorr_coeff(
                                 wigner3j(λ2, λ1, λ0, q2, q1, q0)
                             )
                             if val ≠ 0.0
-                                if !((λ1, λ2, q1, q2) in keys(coeff))
-                                    coeff[(λ1, λ2, q1, q2)] = 0.0
+                                if !((λ1, λ2, q1, q2) in keys(coeff.c))
+                                    coeff.c[(λ1, λ2, q1, q2)] = 0.0
                                 end
-                                coeff[(λ1, λ2, q1, q2)] += (
+                                coeff.c[(λ1, λ2, q1, q2)] += (
                                     pre * orientation *
                                     wigner3j(λ2, λ1, λ0, q2, q1, q0)
                                 )
@@ -66,9 +70,9 @@ end
 function Wcorr(
     theta1::T, phi1::T,
     theta2::T, phi2::T,
-    coeff::Dict{NTuple{4,Int8},Float64}) where {T<:Real}
+    coeff::CoeffCorr{Float64}) where {T<:Real}
     res = 0.0
-    for ((λ1, λ2, q1, q2), c) in coeff
+    for ((λ1, λ2, q1, q2), c) in coeff.c
         res += c *
                sphericalharmonic(theta1, phi1, λ1, q1) *
                sphericalharmonic(theta2, phi2, λ2, q2)
