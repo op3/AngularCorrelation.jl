@@ -212,4 +212,13 @@ include("integrate.jl")
                 State(0), E1(), State(1), Dipole(100.0), State(2), Dipole(100.0), State(3))
         end, 11) ≈ W(π / 3, π / 3, State(0), E1(), State(1), Dipole(100.0), State(2), Dipole(100.0), State(3)) rtol = 1e-5
 
+    coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
+    theta, phi = W_sample(10, coeff)
+    @test length(theta) ≡ 10
+    @test length(phi) ≡ 10
+
+    coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
+    theta1, phi1, theta2, phi2 = Wcorr_sample(10, coeff)
+    @test length(theta) ≡ 10
+    @test length(phi) ≡ 10
 end

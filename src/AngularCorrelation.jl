@@ -1,6 +1,7 @@
 module AngularCorrelation
 
-export W, Wcorr, W_coeff, Wcorr_coeff, Parity, EMCharacter, State, Transition, Dipole, Quadrupole, E1, M1, E2, M2
+export W, Wcorr, W_sample, W_sample_up_to, Wcorr_sample, Wcorr_sample_up_to, W_coeff, Wcorr_coeff
+export Parity, EMCharacter, State, Transition, Dipole, Quadrupole, E1, M1, E2, M2
 
 using SphericalHarmonics: Unnormalized, associatedLegendre, sphericalharmonic
 
@@ -194,10 +195,9 @@ end
 
 include("rand_sphere.jl")
 
-function W_sample(n::Int, cascade...)
-    Wmax = W_estimate_max(cascade...)
+function W_sample_up_to(n::Int, coeff::Vector{T}) where {T<:Real}
+    Wmax = W_estimate_max(coeff)
     theta, phi = rand_sphere(n)
-    coeff = W_coeff(cascade...)
     values = W.(theta, phi, Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
@@ -205,7 +205,34 @@ function W_sample(n::Int, cascade...)
     theta[selection], phi[selection]
 end
 
-function Wcorr_sample(n::Int, coeff)
+function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
+    theta = Vector{Float64}(undef, n)
+    phi = Vector{Float64}(undef, n)
+    remaining = n
+    sampled = 0
+
+    while remaining > 0
+        collected = n - remaining
+        efficiency = if sampled ≠ 0
+            collected / sampled
+        else
+            1.0
+        end
+        sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
+        nt, np = W_sample_up_to(sample_next, coeff)
+        sampled += sample_next
+        size = length(nt)
+
+        use = min(remaining, size)
+        theta[begin+n-remaining:n-remaining+use] = nt[begin:use]
+        phi[begin+n-remaining:n-remaining+use] = np[begin:use]
+        remaining -= size
+    end
+
+    theta, phi
+end
+
+function Wcorr_sample_up_to(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
     Wmax = Wcorr_estimate_max(coeff)
     theta1, phi1 = rand_sphere(n)
     theta2, phi2 = rand_sphere(n)
@@ -214,6 +241,37 @@ function Wcorr_sample(n::Int, coeff)
     @assert all(values .< Wmax)
     selection = sample .< values
     theta1[selection], phi1[selection], theta2[selection], phi2[selection]
+end
+
+function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
+    theta1 = Vector{Float64}(undef, n)
+    phi1 = Vector{Float64}(undef, n)
+    theta2 = Vector{Float64}(undef, n)
+    phi2 = Vector{Float64}(undef, n)
+    remaining = n
+    sampled = 0
+
+    while remaining > 0
+        collected = n - remaining
+        efficiency = if sampled ≠ 0
+            collected / sampled
+        else
+            1.0
+        end
+        sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
+        nt1, np1, nt2, np2 = Wcorr_sample_up_to(sample_next, coeff)
+        sampled += sample_next
+        size = length(nt1)
+
+        use = min(remaining, size)
+        theta1[begin+n-remaining:n-remaining+use] = nt1[begin:use]
+        phi1[begin+n-remaining:n-remaining+use] = np1[begin:use]
+        theta2[begin+n-remaining:n-remaining+use] = nt2[begin:use]
+        phi2[begin+n-remaining:n-remaining+use] = np2[begin:use]
+        remaining -= size
+    end
+
+    theta1, phi1, theta2, phi2
 end
 
 end # module AngularCorrelation
