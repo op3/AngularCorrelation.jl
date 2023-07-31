@@ -27,7 +27,7 @@ function Wcorr_coeff(
     S1::State, γ1::Transition,
     cascade...)
     check_cascade(S0, γ0, S1, γ1, cascade...)
-    coeff = Dict{Vector{Int8},Float64}()
+    coeff = Dict{NTuple{4,Int8},Float64}()
     for λ0 in 0:2:4
         for λ1 in 0:2:4
             for λ2 in 0:2:4
@@ -46,10 +46,10 @@ function Wcorr_coeff(
                                 wigner3j(λ2, λ1, λ0, q2, q1, q0)
                             )
                             if val ≠ 0.0
-                                if !([λ1, λ2, q1, q2] in keys(coeff))
-                                    coeff[[λ1, λ2, q1, q2]] = 0.0
+                                if !((λ1, λ2, q1, q2) in keys(coeff))
+                                    coeff[(λ1, λ2, q1, q2)] = 0.0
                                 end
-                                coeff[[λ1, λ2, q1, q2]] += (
+                                coeff[(λ1, λ2, q1, q2)] += (
                                     pre * orientation *
                                     wigner3j(λ2, λ1, λ0, q2, q1, q0)
                                 )
@@ -66,7 +66,7 @@ end
 function Wcorr(
     theta1::T, phi1::T,
     theta2::T, phi2::T,
-    coeff::Dict{Vector{Int8},Float64}) where {T<:Real}
+    coeff::Dict{NTuple{4,Int8},Float64}) where {T<:Real}
     res = 0.0
     for ((λ1, λ2, q1, q2), c) in coeff
         res += c *
