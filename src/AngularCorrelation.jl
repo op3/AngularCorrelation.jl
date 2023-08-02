@@ -210,17 +210,16 @@ include("rand_sphere.jl")
 
 function W_sample_up_to(n::Int, coeff::Vector{T}) where {T<:Real}
     Wmax = W_estimate_max(coeff)
-    theta, phi = rand_sphere(n)
-    values = W.(theta, phi, Ref(coeff))
+    sph = rand_sphere(n)
+    values = W.(sph[1, :], sph[2, :], Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
     selection = sample .< values
-    theta[selection], phi[selection]
+    sph[:, selection]
 end
 
 function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
-    theta = Vector{T}(undef, n)
-    phi = Vector{T}(undef, n)
+    res = Array{T}(undef, 2, n)
     remaining = n
     sampled = 0
 
@@ -232,35 +231,36 @@ function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
             1.0
         end
         sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
-        nt, np = W_sample_up_to(sample_next, coeff)
+        sample_new = W_sample_up_to(sample_next, coeff)
         sampled += sample_next
-        size = length(nt)
+        elements = size(sample_new)[2]
 
-        use = min(remaining, size)
-        theta[begin+n-remaining:n-remaining+use] = nt[begin:use]
-        phi[begin+n-remaining:n-remaining+use] = np[begin:use]
-        remaining -= size
+        use = min(remaining, elements)
+        res[:, begin+n-remaining:n-remaining+use] = sample_new[:, begin:use]
+        remaining -= elements
     end
-
-    theta, phi
+    res
 end
 
 function Wcorr_sample_up_to(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
     Wmax = Wcorr_estimate_max(coeff)
-    theta1, phi1 = rand_sphere(n)
-    theta2, phi2 = rand_sphere(n)
-    values = Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff))
+    sph1 = rand_sphere(n)
+    sph2 = rand_sphere(n)
+    sph = vcat(sph1, sph2)
+    values = Wcorr.(sph[1, :], sph[2, :], sph[3, :], sph[4, :], Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
     selection = sample .< values
-    theta1[selection], phi1[selection], theta2[selection], phi2[selection]
+    sph[:, selection]
 end
 
+"""
+Returns array of size (4, n)
+with the first dimension corresponding to
+sampled theta1, phi1, theta2, phi2 values.
+"""
 function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
-    theta1 = Vector{T}(undef, n)
-    phi1 = Vector{T}(undef, n)
-    theta2 = Vector{T}(undef, n)
-    phi2 = Vector{T}(undef, n)
+    res = Array{Float64}(undef, 4, n)
     remaining = n
     sampled = 0
 
@@ -272,36 +272,26 @@ function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
             1.0
         end
         sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
-        nt1, np1, nt2, np2 = Wcorr_sample_up_to(sample_next, coeff)
+        sample_new = Wcorr_sample_up_to(sample_next, coeff)
         sampled += sample_next
-        size = length(nt1)
+        elements = size(sample_new)[2]
 
-        use = min(remaining, size)
-        theta1[begin+n-remaining:n-remaining+use] = nt1[begin:use]
-        phi1[begin+n-remaining:n-remaining+use] = np1[begin:use]
-        theta2[begin+n-remaining:n-remaining+use] = nt2[begin:use]
-        phi2[begin+n-remaining:n-remaining+use] = np2[begin:use]
-        remaining -= size
+        use = min(remaining, elements)
+        res[:, begin+n-remaining:n-remaining+use] = sample_new[:, begin:use]
+        remaining -= elements
     end
-
-    theta1, phi1, theta2, phi2
+    res
 end
 
 function Wcorr_sample_mt(n::Int, threads::Int, coeff::CoeffCorr{T}) where {T<:Real}
     n_per_thread = Int(n / threads)
-    theta1 = Vector{T}(undef, n)
-    phi1 = Vector{T}(undef, n)
-    theta2 = Vector{T}(undef, n)
-    phi2 = Vector{T}(undef, n)
+    res = Array{T}(undef, 4, n)
 
     @threads for i = 1:threads
-        tt1, tp1, tt2, tp2 = Wcorr_sample(n_per_thread, coeff)
-        theta1[begin+(i-1)*n_per_thread:i*n_per_thread] = tt1
-        phi1[begin+(i-1)*n_per_thread:i*n_per_thread] = tp1
-        theta2[begin+(i-1)*n_per_thread:i*n_per_thread] = tt2
-        phi2[begin+(i-1)*n_per_thread:i*n_per_thread] = tp2
+        sample_new = Wcorr_sample(n_per_thread, coeff)
+        res[:, begin+(i-1)*n_per_thread:i*n_per_thread] = sample_new
     end
-    theta1, phi1, theta2, phi2
+    res
 end
 
 precompile(W_sample_up_to, (Int64, Vector{Float64}))
