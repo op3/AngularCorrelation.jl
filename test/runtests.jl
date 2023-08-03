@@ -212,6 +212,16 @@ include("integrate.jl")
                 State(0), E1(), State(1), Dipole(100.0), State(2), Dipole(100.0), State(3))
         end, 11) ≈ W(π / 3, π / 3, State(0), E1(), State(1), Dipole(100.0), State(2), Dipole(100.0), State(3)) rtol = 1e-5
 
+    @test AngularCorrelation.check_cascade(State(0, Parity.positive), E1(), State(1, Parity.negative), Dipole(), State(0)) ≠ 0
+    @test AngularCorrelation.check_cascade(State(0, Parity.positive), M1(), State(1, Parity.positive), Dipole(), State(0)) ≠ 0
+    @test AngularCorrelation.check_cascade(State(0, Parity.positive), E2(), State(2, Parity.positive), Quadrupole(), State(0)) ≠ 0
+    @test AngularCorrelation.check_cascade(State(0, Parity.positive), M2(), State(2, Parity.negative), Quadrupole(), State(0)) ≠ 0
+    @test_throws AngularCorrelation.CascadeException AngularCorrelation.check_cascade(State(0), Transition(0, EMCharacter.unknown, 1, EMCharacter.unknown, 0.0), State(0))
+    @test_throws AngularCorrelation.CascadeException AngularCorrelation.check_cascade(State(0, Parity.positive), M1(), State(1, Parity.negative), Dipole(), State(0))
+    @test_throws AngularCorrelation.CascadeException AngularCorrelation.check_cascade(State(0, Parity.positive), E1(), State(1, Parity.positive), Dipole(), State(0))
+    @test_throws AngularCorrelation.CascadeException AngularCorrelation.check_cascade(State(0, Parity.positive), M2(), State(2, Parity.positive), Quadrupole(), State(0))
+    @test_throws AngularCorrelation.CascadeException AngularCorrelation.check_cascade(State(0, Parity.positive), E2(), State(2, Parity.negative), Quadrupole(), State(0))
+
     coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
     @test size(W_sample(10, coeff)) ≡ (10, 2)
 

@@ -57,22 +57,34 @@ function State(J::Rational, parity::Parity.T=Parity.unknown)
     State(HalfInt(J), parity)
 end
 
-@inline function check_em_char(parity_i::Half{T}, L::Int, em_char::EMCharacter.T, parity_f::Half{T}) where {T}
+struct CascadeException <: Exception
+    msg::String
+end
+
+@inline function check_em_char(parity_i::Parity.T, L::Int, em_char::EMCharacter.T, parity_f::Parity.T)
     if em_char ≡ EMCharacter.electric
-        @assert parity_f ≡ parity_i^L
+        if Int(parity_f) ≠ Int(parity_i) * (-1)^L
+            throw(CascadeException("Wrong EMCharacter of radiation"))
+        end
     elseif em_char ≡ EMCharacter.magnetic
-        @assert parity_f ≡ parity_i^(L + 1)
+        if Int(parity_f) ≠ Int(parity_i) * (-1)^(L + 1)
+            throw(CascadeException("Wrong EMCharacter of radiation"))
+        end
     else
         true
     end
 end
 
 function check_transition(Si::State, γ::Transition, Sf::State)
-    @assert Si.J + Sf.J ≥ γ.L ≥ abs(Si.J - Sf.J) "Selection rule violated for leading-order radiation"
-    if γ.δ ≠ 0.0
-        @assert Si.J + Sf.J ≥ γ.Lp ≥ abs(Si.J - Sf.J) "Selection rule violated for second-order radiation (γ.δ ≠ 0)"
+    if !(Si.J + Sf.J ≥ γ.L ≥ abs(Si.J - Sf.J))
+        throw(CascadeException("Selection rule violated for leading-order radiation"))
     end
-    @assert γ.L ≥ 1 "No monopole transitions"
+    if γ.δ ≠ 0.0 && !(Si.J + Sf.J ≥ γ.Lp ≥ abs(Si.J - Sf.J))
+        throw(CascadeException("Selection rule violated for second-order radiation (γ.δ ≠ 0)"))
+    end
+    if γ.L ≡ 0
+        throw(CascadeException("No monopole transitions"))
+    end
     if Si.parity ≠ Parity.unknown && Sf.parity ≠ Parity.unknown
         if γ.em_char ≠ EMCharacter.unknown
             check_em_char(Si.parity, γ.L, γ.em_char, Sf.parity)
