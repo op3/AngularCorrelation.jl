@@ -141,6 +141,26 @@ function W_coeff(
     return coeff
 end
 
+"""
+    W(
+        theta::T, phi::T,
+        coeff::Vector{T}) where {T<:Real}
+
+Calculate angular distribution for a single emitted γ.
+
+The zeroth (exciting) photon of the cascade γ0 is aligned
+with the z axis and linearly polarized in the xz plane.
+The last photon of the cascade is assumed to be observed.
+All photons inbetween are unobserved.
+This function is normalized to 4π.
+
+See Hamilton, eq. 12.245
+
+# Arguments
+- `theta::T`: azimuthal angle of emitted photon.
+- `phi::T`: polar angle of emitted photon.
+- `coeff::Vector{T}`: Angular distribution coefficients obtained from `W_coeff()`.
+"""
 function W(
     theta::T, phi::T,
     coeff::Vector{T}) where {T<:Real}
@@ -154,14 +174,12 @@ function W(
     )
 end
 
-function W(
-    theta::Vector{T}, phi::Vector{T},
-    coeff::Vector{T}) where {T<:Real}
-    W.(theta, phi, Ref(coeff))
-end
-
 """
-Angular distribution for a single emitted γ
+    W(
+        theta::Vector{T}, phi::Vector{T},
+        coeff::Vector{T}) where {T<:Real}
+
+Calculate angular distribution for a single emitted γ.
 
 The zeroth (exciting) photon of the cascade γ0 is aligned
 with the z axis and linearly polarized in the xz plane.
@@ -169,7 +187,42 @@ The last photon of the cascade is assumed to be observed.
 All photons inbetween are unobserved.
 This function is normalized to 4π.
 
-Hamilton, eq. 12.245
+See Hamilton, eq. 12.245
+
+# Arguments
+- `theta::Vector{T}`: azimuthal angle of emitted photon.
+- `phi::Vector{T}`: polar angle of emitted photon.
+- `coeff::Vector{T}`: Angular distribution coefficients obtained from `W_coeff()`.
+"""
+function W(
+    theta::Vector{T}, phi::Vector{T},
+    coeff::Vector{T}) where {T<:Real}
+    W.(theta, phi, Ref(coeff))
+end
+
+"""
+    W(
+        theta::T, phi::T,
+        S0::State, γ0::Transition,
+        cascade...) where {T<:Real}
+
+Calculate angular distribution for a single emitted γ.
+
+The zeroth (exciting) photon of the cascade γ0 is aligned
+with the z axis and linearly polarized in the xz plane.
+The last photon of the cascade is assumed to be observed.
+All photons inbetween are unobserved.
+This function is normalized to 4π.
+
+See Hamilton, eq. 12.245
+
+# Arguments
+- `theta::T`: azimuthal angle of emitted photon.
+- `phi::T`: polar angle of emitted photon.
+- `S0::State`: Initial state before excitation.
+- `γ0::Transition`: Photon that performs the excitation
+- `cascade...`: Rest of the decay cascade
+  (consisting of `Transition`s and `State`s)
 """
 function W(
     theta::T, phi::T,
@@ -190,6 +243,24 @@ precompile(W, (Vector{Float64}, Vector{Float64}, State, Transition, State, Trans
 precompile(W, (Float64, Float64, Float64, Float64, Vector{Float64}))
 precompile(W, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}))
 
+"""
+    W_estimate_max(coeff)
+
+Estimate the maximum of an angular distribution.
+This is done by sampling the distribution at angles
+that are multiples or π/6.
+
+# Arguments
+- `coeff::Vector{T}`: Coefficients for angular distribution obtained
+  using `W_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
+julia> AngularCorrelation.W_estimate_max(coeff)
+1.5
+```
+"""
 function W_estimate_max(coeff)
     theta = 0:π/6:π
     phi = 0:π/6:2π
@@ -208,18 +279,70 @@ end
 
 include("rand_sphere.jl")
 
+"""
+    W_sample_up_to(n::Integer, coeff::Vector{T}) where {T<:Real}
+
+Obtain sample for angular distribution.
+Retults in an array of size(n, 2)
+with the first dimension corresponding to the number of non-rejected samples,
+and the second dimension corresponding to the coordinates theta and phi.
+The number of non-rejected samples that are returned is smaller or equal
+to the number of samples `n` drawn initially.
+Depending on how strongly correlated the angular distribution is, significantly
+less samples can be returned.
+
+# Arguments
+- `n::Integer`: Number of samples to draw
+- `coeff::Vector{T}`: Coefficients for angular distribution obtained
+  using `W_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
+julia> W_sample_up_to(5, coeff)
+3×2 Matrix{Float64}:
+ 2.00991  6.1304
+ 2.54216  2.32825
+ 1.02637  0.953504
+ ```
+"""
 function W_sample_up_to(n::Int, coeff::Vector{T}) where {T<:Real}
     Wmax = W_estimate_max(coeff)
-    sph = rand_sphere(n)
-    values = W.(sph[1, :], sph[2, :], Ref(coeff))
+    sph = rand_sphere(n)'
+    values = W.(sph[:, 1], sph[:, 2], Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
     selection = sample .< values
-    sph[:, selection]
+    sph[selection, :]
 end
 
-function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
-    res = Array{T}(undef, 2, n)
+"""
+    W_sample(n::Integer, coeff::Vector{T}) where {T<:Real}
+
+Obtain sample for angular distribution.
+Retults in an array of size(n, 2)
+with the first dimension corresponding to the number of samples,
+and the second dimension corresponding to the coordinates theta and phi.
+
+# Arguments
+- `n::Integer`: Number of samples to draw
+- `coeff::Vector{T}`: Coefficients for angular distribution obtained
+  using `W_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
+julia> W_sample(5, coeff)
+5×2 Matrix{Float64}:
+ 1.46641   1.04276
+ 2.71659   4.13127
+ 2.7962    5.12808
+ 0.986001  6.00779
+ 0.735967  0.32747
+ ```
+"""
+function W_sample(n::Integer, coeff::Vector{T}) where {T<:Real}
+    res = Array{T}(undef, n, 2)
     remaining = n
     sampled = 0
 
@@ -233,34 +356,98 @@ function W_sample(n::Int, coeff::Vector{T}) where {T<:Real}
         sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
         sample_new = W_sample_up_to(sample_next, coeff)
         sampled += sample_next
-        elements = size(sample_new)[2]
+        elements = size(sample_new)[1]
 
         use = min(remaining, elements)
-        res[:, begin+n-remaining:n-remaining+use] = sample_new[:, begin:use]
+        res[begin+n-remaining:n-remaining+use, :] = sample_new[begin:use, :]
         remaining -= elements
     end
     res
 end
 
-function Wcorr_sample_up_to(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
+"""
+    Wcorr_sample_up_to(n::Integer, coeff::CoeffCorr{T}) where {T<:Real}
+
+Obtain sample for angular correlation. 
+Results in an array of size (i, 2, 2)
+with the first dimension corresponding to the number of non-rejected samples,
+the second dimension corresponding to the detected photon,
+and the third dimension corresponding to the coordinates theta and phi.
+The number of non-rejected samples that are returned is smaller or equal
+to the number of samples `n` drawn initially.
+Depending on how strongly correlated the angular distribution is, significantly
+less samples can be returned.
+
+# Arguments
+- `n::Integer`: Number of samples to draw before rejection
+- `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
+  using `Wcorr_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
+julia> Wcorr_sample_up_to(50, coeff)
+3×2×2 Array{Float64, 3}:
+[:, :, 1] =
+ 1.06189   0.435861
+ 0.541557  1.23968
+ 2.57618   1.72244
+
+[:, :, 2] =
+ 2.66601  4.03896
+ 1.90058  5.88181
+ 4.72594  4.09244
+```
+"""
+function Wcorr_sample_up_to(n::Integer, coeff::CoeffCorr{T}) where {T<:Real}
     Wmax = Wcorr_estimate_max(coeff)
-    sph1 = rand_sphere(n)
-    sph2 = rand_sphere(n)
-    sph = vcat(sph1, sph2)
-    values = Wcorr.(sph[1, :], sph[2, :], sph[3, :], sph[4, :], Ref(coeff))
+    # (samples, gamma, coordinate)
+    sph = Array{Float64}(undef, n, 2, 2)
+    sph[:, 1, :] = rand_sphere(n)'
+    sph[:, 2, :] = rand_sphere(n)'
+    values = Wcorr.(sph[:, 1, 1], sph[:, 1, 2], sph[:, 2, 1], sph[:, 2, 2], Ref(coeff))
     sample = rand(n)
     @assert all(values .< Wmax)
     selection = sample .< values
-    sph[:, selection]
+    sph[selection, :, :]
 end
 
 """
-Returns array of size (4, n)
-with the first dimension corresponding to
-sampled theta1, phi1, theta2, phi2 values.
+    Wcorr_sample(n::Integer, coeff::CoeffCorr{T}) where {T<:Real}
+
+Obtain sample for angular correlation. 
+Results in an array of size (n, 2, 2)
+with the first dimension corresponding to the number of samples,
+the second dimension corresponding to the detected photon,
+and the third dimension corresponding to the coordinates theta and phi.
+
+# Arguments
+- `n::Integer`: Number of samples to draw
+- `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
+  using `Wcorr_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
+julia> Wcorr_sample(5, coeff)
+5×2×2 Array{Float64, 3}:
+[:, :, 1] =
+ 1.22272  2.08489
+ 1.26879  1.24111
+ 2.52387  0.457633
+ 2.18338  1.12996
+ 2.55434  0.668774
+
+[:, :, 2] =
+ 4.41387  2.41454
+ 1.04299  1.37492
+ 4.25477  3.68128
+ 1.90813  3.43944
+ 2.08456  0.260601
+```
 """
-function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
-    res = Array{Float64}(undef, 4, n)
+function Wcorr_sample(n::Integer, coeff::CoeffCorr{T}) where {T<:Real}
+    res = Array{Float64}(undef, n, 2, 2)
     remaining = n
     sampled = 0
 
@@ -274,22 +461,57 @@ function Wcorr_sample(n::Int, coeff::CoeffCorr{T}) where {T<:Real}
         sample_next = max(Int64(round(remaining / efficiency * 1.02)), 64)
         sample_new = Wcorr_sample_up_to(sample_next, coeff)
         sampled += sample_next
-        elements = size(sample_new)[2]
+        elements = size(sample_new)[1]
 
         use = min(remaining, elements)
-        res[:, begin+n-remaining:n-remaining+use] = sample_new[:, begin:use]
+        res[begin+n-remaining:n-remaining+use, :, :] = sample_new[begin:use, :, :]
         remaining -= elements
     end
     res
 end
 
-function Wcorr_sample_mt(n::Int, threads::Int, coeff::CoeffCorr{T}) where {T<:Real}
+"""
+    Wcorr_sample_mt(n::Integer, coeff::CoeffCorr{T}) where {T<:Real}
+
+Obtain sample for angular correlation. 
+Results in an array of size (n, 2, 2)
+with the first dimension corresponding to the number of samples,
+the second dimension corresponding to the detected photon,
+and the third dimension corresponding to the coordinates theta and phi.
+The calculation is multi-threaded, set the environment variable
+`JULIA_NUM_THREADS` before starting julia or use
+the cli argument `-t/--threads`.
+
+# Arguments
+- `n::Integer`: Number of samples to draw
+- `threads::Integer`: Number of threads to use
+- `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
+  using `Wcorr_coeff()`
+
+# Examples
+```julia-repl
+julia> coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
+julia> Wcorr_sample_mt(4, 2, coeff)
+4×2×2 Array{Float64, 3}:
+[:, :, 1] =
+ 1.7967   1.63842
+ 1.88768  1.38813
+ 1.04846  0.863921
+ 2.16277  1.1874
+
+[:, :, 2] =
+ 1.20264  2.84755
+ 3.24036  3.75469
+ 4.66713  3.03743
+ 3.75127  2.38884
+```
+"""
+function Wcorr_sample_mt(n::Integer, threads::Integer, coeff::CoeffCorr{T}) where {T<:Real}
     n_per_thread = Int(n / threads)
-    res = Array{T}(undef, 4, n)
+    res = Array{Float64}(undef, n, 2, 2)
 
     @threads for i = 1:threads
-        sample_new = Wcorr_sample(n_per_thread, coeff)
-        res[:, begin+(i-1)*n_per_thread:i*n_per_thread] = sample_new
+        res[begin+(i-1)*n_per_thread:i*n_per_thread, :, :] = Wcorr_sample(n_per_thread, coeff)
     end
     res
 end
@@ -298,5 +520,6 @@ precompile(W_sample_up_to, (Int64, Vector{Float64}))
 precompile(Wcorr_sample_up_to, (Int64, CoeffCorr{Float64}))
 precompile(W_sample, (Int64, Vector{Float64}))
 precompile(Wcorr_sample, (Int64, CoeffCorr{Float64}))
+precompile(Wcorr_sample_mt, (Int64, Int64, CoeffCorr{Float64}))
 
 end # module AngularCorrelation

@@ -213,9 +213,9 @@ include("integrate.jl")
         end, 11) ≈ W(π / 3, π / 3, State(0), E1(), State(1), Dipole(100.0), State(2), Dipole(100.0), State(3)) rtol = 1e-5
 
     coeff = W_coeff(State(0), E1(), State(1), Dipole(), State(0))
-    @test size(W_sample(10, coeff)) ≡ (2, 10)
+    @test size(W_sample(10, coeff)) ≡ (10, 2)
 
     coeff = Wcorr_coeff(State(0), E1(), State(1), Dipole(), State(2), Quadrupole(), State(0))
-    @test size(Wcorr_sample(100, coeff)) ≡ (4, 100)
-    @test size(Wcorr_sample_mt(100, 2, coeff)) ≡ (4, 100)
+    @test size(Wcorr_sample(100, coeff)) ≡ (100, 2, 2)
+    @test size(Wcorr_sample_mt(100, 2, coeff)) ≡ (100, 2, 2)
 end
