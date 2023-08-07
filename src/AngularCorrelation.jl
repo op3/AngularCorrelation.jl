@@ -269,12 +269,11 @@ function W_estimate_max(coeff)
 end
 
 function Wcorr_estimate_max(coeff)
-    thetas = Vector(0:π/12:π/2)
-    phis = Vector(0:π/12:π/2)
-    theta1 = reshape(thetas, (length(thetas), 1, 1, 1))
-    phi1 = reshape(phis, (1, length(phis), 1, 1))
-    theta2 = reshape(thetas, (1, 1, length(thetas), 1))
-    phi2 = reshape(phis, (1, 1, 1, length(phis)))
+    points = unique(vcat(Vector(0:π/4:π/2), Vector(0:π/3:π/2)))
+    theta1 = reshape(points, (length(points), 1, 1, 1))
+    phi1 = reshape(points, (1, length(points), 1, 1))
+    theta2 = reshape(points, (1, 1, length(points), 1))
+    phi2 = reshape(points, (1, 1, 1, length(points)))
     vals = abs.(Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff)))
     # Safty factor of 0.5% because I have no idea how to properly find
     # the real maximum. The maximum deviation observed in practice is
