@@ -4,12 +4,18 @@ include("wigner.jl")
 include("cascade.jl")
 
 """
+    F(λ::Int, L::Int, Lp::Int, J2::HalfInt, J1::HalfInt)
+
 ordinary F-coefficient
 
 See Hamilton, eq. 12.168
 
-L: multipolarity
-Lp: multipolarity (next-order)
+# Arguments
+- `λ::Int`
+- `L::Int`: multipolarity
+- `Lp::Int`: multipolarity (next-order)
+- `J2::HalfInt`
+- `J1::HalfInt`
 
 """
 @inline function F(λ::Int, L::Int, Lp::Int, J2::HalfInt, J1::HalfInt)
@@ -37,6 +43,8 @@ Lp: multipolarity (next-order)
 end
 
 """
+    F(λ::Int, λ1::Int, λ0::Int, L::Int, Lp::Int, J1::HalfInt, J0::HalfInt)
+
 generalized F-coefficient
 
 Hamilton, eq 12.163
@@ -61,6 +69,8 @@ Hamilton, eq 12.163
 end
 
 """
+    A(λ::Int, state_from::State, γ::Transition, state_to::State)
+
 Angular distribution coefficient
 
 See Hamilton, eq. 12.185.
@@ -74,6 +84,8 @@ See Hamilton, eq. 12.185.
 end
 
 """
+    A(λ1::Int, λ2::Int, λ0::Int, state_from::State, γ::Transition, state_to::State)
+
 Generalized directional distribution coefficient
 
 See Hamilton, eq. 12.205
@@ -91,9 +103,12 @@ Only for mixture of two multipolarities
 end
 
 """
+    B(λ::Int, state_from::State, γ::Transition, state_to::State)
+
 Orientation parameter
 
 See Hamilton, eq. 12.228
+
 For unpolarized radiation!
 """
 @inline function B(λ::Int, state_from::State, γ::Transition, state_to::State)
@@ -107,9 +122,12 @@ For unpolarized radiation!
 end
 
 """
+    B_lpol(λ::Int, state_from::State, γ::Transition, state_to::State)
+
 Orientation parameter
 
 See Hamilton, eq. 12.246
+
 For linearly-polarized radiation!
 """
 @inline function B_lpol(λ::Int, state_from::State, γ::Transition, state_to::State)
@@ -129,7 +147,10 @@ For linearly-polarized radiation!
 end
 
 """
+    B_lpol(q::Int, λ::Int, state_from::State, γ::Transition, state_to::State)
+
 Hamilton, eqs. 12.232 to 12.234
+
 For linearly-polarized radiation!
 """
 @inline function B_lpol(q::Int, λ::Int, state_from::State, γ::Transition, state_to::State)
@@ -172,6 +193,8 @@ For linearly-polarized radiation!
 end
 
 """
+    U(λ::Int, L::Int, Lp::Int, J2::HalfInt, J1::HalfInt)
+
 deorientation factor
 
 Hamilton, eq 12.172
@@ -181,6 +204,8 @@ Hamilton, eq 12.172
 end
 
 """
+    U(λ::Int, state_from::State, γ::Transition, state_to::State)
+
 deorientation coefficient
 
 Hamilton, eq 12.209
@@ -197,6 +222,8 @@ Hamilton, eq 12.209
 end
 
 """
+    kappa(λ::Int, L::Int, Lp::Int)
+
 See Hamilton, eq. 12.243
 """
 @inline function kappa(λ::Int, L::Int, Lp::Int)

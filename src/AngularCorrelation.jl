@@ -9,7 +9,9 @@ using Base.Threads
 include("coefficients.jl")
 
 """
-Applies deorientation and angular distribution coefficients
+    final_state_orientation(λ2, cascade...)
+
+Apply deorientation and angular distribution coefficients
 that result in the final (observed) state after multiple
 unobserved transitions.
 """
@@ -28,6 +30,24 @@ struct CoeffCorr{T<:Real}
     c::Dict{NTuple{4,Int8},T}
 end
 
+"""
+    Wcorr_coeff(
+        S0::State, γ0::Transition,
+        S1::State, γ1::Transition,
+        cascade...)
+
+Calculate coefficients for angular correlations.
+
+See Hamilton, eq. 12.204.
+
+# Arguments
+- `S0::State`: Initial state before excitation
+- `γ0::Transition`: Photon that performs the excitation
+- `S1::State`: Excited states that subsequently decays
+- `γ1::Transition`: First emitted photon
+- `cascade...`: Rest of the decay cascade (consisting of `Transition`s
+  and `State`s), with the last emitted photon being observed
+"""
 function Wcorr_coeff(
     S0::State, γ0::Transition,
     S1::State, γ1::Transition,
@@ -69,6 +89,30 @@ function Wcorr_coeff(
     return coeff
 end
 
+"""
+    Wcorr(
+        theta1::T, phi1::T,
+        theta2::T, phi2::T,
+        coeff::CoeffCorr{Float64}) where {T<:Real}
+
+Calculate angular correlation for a triple γ cascade
+
+The zeroth (exciting) photon of the cascade γ0 is aligned
+with the z axis and linearly polarized in the xz plane.
+The first (γ1) and last photons are assumed to be observed.
+All photons inbetween are unobserved.
+This function is normalized to 4π.
+
+See Hamilton, eq. 12.204.
+
+# Arguments
+- `theta1::Vector{T}`: azimuthal angle of first emitted photon.
+- `phi1::Vector{T}`: polar angle of first emitted photon.
+- `theta2::Vector{T}`: azimuthal angle of second emitted photon.
+- `phi2::Vector{T}`: polar angle of second emitted photon.
+- `coeff::CoeffCorr{Float}`: Coefficients for angular correlation obtained
+  using `Wcorr_coeff()`
+"""
 @inline function Wcorr(
     theta1::T, phi1::T,
     theta2::T, phi2::T,
@@ -82,6 +126,31 @@ end
     real(res)
 end
 
+"""
+    Wcorr(
+        theta1::Vector{T}, phi1::Vector{T},
+        theta2::Vector{T}, phi2::Vector{T},
+        coeff::CoeffCorr{Float64}) where {T<:Real}
+
+Angular correlation for a triple γ cascade
+
+The zeroth (exciting) photon of the cascade γ0 is aligned
+with the z axis and linearly polarized in the xz plane.
+The first (γ1) and last photons are assumed to be observed.
+All photons inbetween are unobserved.
+This function is normalized to 4π.
+Variant that automatically calls the vectorized version.
+
+See Hamilton, eq. 12.204.
+
+# Arguments
+- `theta1::Vector{T}`: azimuthal angle of first emitted photon.
+- `phi1::Vector{T}`: polar angle of first emitted photon.
+- `theta2::Vector{T}`: azimuthal angle of second emitted photon.
+- `phi2::Vector{T}`: polar angle of second emitted photon.
+- `coeff::CoeffCorr{Float}`: Coefficients for angular correlation obtained
+  using `Wcorr_coeff()`
+"""
 function Wcorr(
     theta1::Vector{T}, phi1::Vector{T},
     theta2::Vector{T}, phi2::Vector{T},
@@ -98,7 +167,19 @@ The first (γ1) and last photons are assumed to be observed.
 All photons inbetween are unobserved.
 This function is normalized to 4π.
 
-Hamilton, eq. 12.204
+See Hamilton, eq. 12.204.
+
+# Arguments
+- `theta1::Vector{T}`: azimuthal angle of first emitted photon.
+- `phi1::Vector{T}`: polar angle of first emitted photon.
+- `theta2::Vector{T}`: azimuthal angle of second emitted photon.
+- `phi2::Vector{T}`: polar angle of second emitted photon.
+- `S0::State`: Initial state before excitation
+- `γ0::Transition`: Photon that performs the excitation
+- `S1::State`: Excited states that subsequently decays
+- `γ1::Transition`: First emitted photon
+- `cascade...`: Rest of the decay cascade (consisting of `Transition`s
+  and `State`s), with the last emitted photon being observed
 """
 @inline function Wcorr(
     theta1::T, phi1::T,
@@ -128,6 +209,19 @@ precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Flo
 precompile(Wcorr, (Float64, Float64, Float64, Float64, CoeffCorr{Float64}))
 precompile(Wcorr, (Vector{Float64}, Vector{Float64}, Vector{Float64}, Vector{Float64}, CoeffCorr{Float64}))
 
+"""
+    W_coeff(
+        S0::State, γ0::Transition,
+        cascade...)
+
+Calculate coefficients for angular distributions.
+
+# Arguments
+- `S0::State`: Initial state before excitation
+- `γ0::Transition`: Photon that performs the excitation
+- `cascade...`: Rest of the decay cascade (consisting of `Transition`s
+  and `State`s), with the last emitted photon being observed
+"""
 function W_coeff(
     S0::State, γ0::Transition,
     cascade...)
