@@ -262,19 +262,24 @@ julia> AngularCorrelation.W_estimate_max(coeff)
 ```
 """
 function W_estimate_max(coeff)
-    theta = 0:π/6:π
-    phi = 0:π/6:2π
-    vals = W.(theta, phi', Ref(coeff))
+    theta = 0:π/12:π/2
+    phi = 0:π/12:π/2
+    vals = abs.(W.(theta, phi', Ref(coeff)))
     maximum(vals)
 end
 
 function Wcorr_estimate_max(coeff)
-    theta1 = reshape(Vector(0:π/6:π), (7, 1, 1, 1))
-    phi1 = reshape(Vector(0:π/6:2π), (1, 13, 1, 1))
-    theta2 = reshape(Vector(0:π/6:π), (1, 1, 7, 1))
-    phi2 = reshape(Vector(0:π/6:2π), (1, 1, 1, 13))
-    vals = Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff))
-    maximum(vals)
+    thetas = Vector(0:π/12:π/2)
+    phis = Vector(0:π/12:π/2)
+    theta1 = reshape(thetas, (length(thetas), 1, 1, 1))
+    phi1 = reshape(phis, (1, length(phis), 1, 1))
+    theta2 = reshape(thetas, (1, 1, length(thetas), 1))
+    phi2 = reshape(phis, (1, 1, 1, length(phis)))
+    vals = abs.(Wcorr.(theta1, phi1, theta2, phi2, Ref(coeff)))
+    # Safty factor of 0.5% because I have no idea how to properly find
+    # the real maximum. The maximum deviation observed in practice is
+    # 3.4713%, giving some slight margin for further errors.
+    maximum(vals) .* 1.005
 end
 
 include("rand_sphere.jl")
