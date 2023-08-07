@@ -392,7 +392,7 @@ less samples can be returned.
 # Arguments
 - `n::Integer`: Number of samples to draw
 - `coeff::Vector{T}`: Coefficients for angular distribution obtained
-  using `W_coeff()`
+  using [`W_coeff()`](@ref AngularCorrelation.W_coeff)
 
 # Examples
 ```julia-repl
@@ -425,7 +425,7 @@ and the second dimension corresponding to the coordinates theta and phi.
 # Arguments
 - `n::Integer`: Number of samples to draw
 - `coeff::Vector{T}`: Coefficients for angular distribution obtained
-  using `W_coeff()`
+  using [`W_coeff()`](@ref AngularCorrelation.W_coeff)
 
 # Examples
 ```julia-repl
@@ -479,7 +479,7 @@ less samples can be returned.
 # Arguments
 - `n::Integer`: Number of samples to draw before rejection
 - `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
-  using `Wcorr_coeff()`
+  using [`Wcorr_coeff()`](@ref AngularCorrelation.Wcorr_coeff)
 
 # Examples
 ```julia-repl
@@ -522,7 +522,7 @@ and the third dimension corresponding to the coordinates theta and phi.
 # Arguments
 - `n::Integer`: Number of samples to draw
 - `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
-  using `Wcorr_coeff()`
+  using [`Wcorr_coeff()`](@ref AngularCorrelation.Wcorr_coeff)
 
 # Examples
 ```julia-repl
@@ -584,7 +584,7 @@ the cli argument `-t/--threads`.
 - `n::Integer`: Number of samples to draw
 - `threads::Integer`: Number of threads to use
 - `coeff::CoeffCorr{T}`: Coefficients for angular correlation obtained
-  using `Wcorr_coeff()`
+  using [`Wcorr_coeff()`](@ref AngularCorrelation.Wcorr_coeff)
 
 # Examples
 ```julia-repl

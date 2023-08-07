@@ -1,7 +1,14 @@
 using EnumX
 using HalfIntegers: Half, HalfInt
 
+"""
+Electromagnetic character of a [`Transition`](@ref AngularCorrelation.Transition)
+"""
 @enumx EMCharacter electric = 1 magnetic = -1 unknown = 0
+
+"""
+Parity quantum number of a [`State`](@ref AngularCorrelation.State)
+"""
 @enumx Parity negative = -1 positive = 1 unknown = 0
 
 """
@@ -23,7 +30,7 @@ struct Transition
 end
 
 """
-Invert the radiation character
+Invert the radiation character.
 
 # Arguments
 - `char::EMCharacter.T`: original radiation character
