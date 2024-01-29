@@ -48,6 +48,30 @@ Supplying parity and electromagnetic character information for anything
 but the first transition and first two states is useless.
 The parity of the states is optional (but a useful cross-check to make sure the transition makes sense)
 
+Angular distributions are calculated in the following way:
+
+```julia
+theta = π/2
+phi = π/2
+W(theta, phi, S0, g0, S1, g1, S2, g2, S3)
+```
+
+The cascade can be arbitrarily long.
+The function `W` returns the angular distribution of the last emitted photon in the given cascade.
+
+For states with half-integer angular momentum (i.e., odd-mass nuclei),
+the angular momentum has to be given as a Rational number:
+
+```julia
+s32 = State(3//2)
+```
+
+Multipole mixing ratios δ are optional arguments of the transitions:
+
+```julia
+mixed = M1(-0.34)
+```
+
 ## Conventions
 
 The Integral over the complete probability distribution
